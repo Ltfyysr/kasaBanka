@@ -1,0 +1,40 @@
+﻿
+@{
+    ViewBag.Title = "BankaBakiye";
+}
+
+<h2>Banka İşlemleri</h2>
+
+<table class="table table-bordered table-striped table-hover" id="bankabakiyetablosu">
+    <thead>
+        <tr>
+            <td>Banka Adı</td>
+            <td>İşlem </td>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script src="~/Scripts/jquery-3.4.1.js"></script>
+<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<link href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css" rel="stylesheet" />
+
+<script>
+    var table;
+
+    $(document).ready(function () {
+        $('#bankabakiyetablosu').DataTable({
+            ajax: {
+                url: "/Home/GetBankaBilgiIslem",
+                type: "GET",
+                datatype: "json",
+            },
+
+            columns: [
+                { data: "BankaAdi" },
+                { data: "Islem" },
+
+            ]
+        });
+    });
+</script>

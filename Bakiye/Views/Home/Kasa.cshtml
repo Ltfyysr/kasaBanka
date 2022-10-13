@@ -1,0 +1,116 @@
+﻿
+@{
+    ViewBag.Title = "Kasa";
+}
+
+<h2>Kasa Bilgileri</h2>
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" style="margin-bottom: 10px;">
+    Yeni Kasa Ekle
+</button>
+
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Yeni Kasa Ekle</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="col">
+                    <h6>Kasa Kodu</h6>
+                    <input id="kasaKodu" />
+                    <br />
+                    <h6>Kasa Adı</h6>
+                    <input id="kasaAdi" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" onclick="YeniKasa()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<table class="table table-bordered table-striped table-hover" id="kasatablosu">
+    <thead>
+        <tr>
+            <td>Kasa Kodu</td>
+            <td>Kasa Adı</td>
+            <td>Bakiye (TL)</td>
+            <td>Bakiye (USD)</td>
+            <td>Bakiye (EUR)</td>
+            <td>Bakiye (GBP)</td>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+
+
+
+<script src="~/Scripts/jquery-3.4.1.js"></script>
+<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<link href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css" rel="stylesheet" />
+
+<script>
+    var table;
+
+    function YeniKasa() {
+
+        var obj = {
+            KasaKodu : $('#kasaKodu').val(),
+            KasaAdi : $('#kasaAdi').val(),
+        };
+
+        $.ajax({
+            type: "POST",
+            url: "/Home/KasaEkle",
+            data: { model: obj },
+            dataType: "json",
+            success: function (res) {
+                $('#exampleModal').modal('hide');
+                Clear();
+                if (res.result == 1) {
+                    table.ajax.reload();
+                } else {
+                    alert("Hata !");
+                }
+            },
+            error: function () {
+                $('#exampleModal').modal('hide');
+                Clear();
+                alert("Hata !");
+            }
+        });
+    }
+
+    function Clear() {
+        $('#kasaKodu').val("");
+        $('#kasaAdi').val("");
+    }
+
+    $(document).ready(function () {
+         table = $('#kasatablosu').DataTable({
+            ajax: {
+                url: "/Home/GetKasa",
+                type: "GET",
+                datatype: "json",
+            },
+
+            columns: [
+                { data: "KasaKodu" },
+                { data: "KasaAdi" },
+                { data: "Bakiye_TL" },
+                { data: "Bakiye_USD" },
+                { data: "Bakiye_EUR" },
+                { data: "Bakiye_GBP" },
+              
+            ]
+        });
+    });
+</script>

@@ -1,0 +1,228 @@
+﻿
+@{
+    ViewBag.Title = "Islemler";
+}
+
+<h2>Tahsilat ve Ödeme İşlemlerimiz</h2>
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" style="margin-bottom: 10px;">
+    Yeni İşlem Ekle
+</button>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Yeni İşlem Ekle</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="col">
+                    <h6>İşlem Tipi</h6>
+                    <select id="islemtipi" class="form-control">
+                        <option value="T" selected>Nakit Tahsilat</option>
+                        <option value="G">Gelen Havale</option>
+                        <option value="H">Giden Havale</option>
+                        <option value="O">Nakit Ödeme</option>
+                    </select>
+                    <br />
+                    <h6>İşlem No</h6>
+                    <input id="islemno" class="form-control" />
+                    <br />
+                    <h6>Açıklama</h6>
+                    <input id="aciklama" class="form-control" />
+                    <br />
+                    <h6>Para Birimi</h6>
+                    <select id="parabirimi" class="form-control">
+                        <option value="TL" selected>Türk Lirası</option>
+                        <option value="USD">Amerikan Doları</option>
+                        <option value="EUR">Euro</option>
+                        <option value="GBP">İngiliz Sterlini</option>
+                    </select>
+                    <br />
+                    <h6>Tutar</h6>
+                    <input id="tutar" class="form-control" />
+                    <br />
+                    <div id="kasadiv" style="display: block">
+                        <h6>Kasa Seçiniz</h6>
+                        @Html.DropDownList("kasaid", new SelectList(Settings.KasalarDropdown(), "Value", "Text"), "Seçiniz", new { @id = "kasaid", @class = "form-control", @required = "required", @style = "width:100%;height:100%" })
+                    </div>
+                    <div id="bankadiv" style="display: none">
+                        <h6>Banka Seçiniz</h6>
+                        @Html.DropDownList("bankaid", new SelectList(Settings.BankalarDropdown(), "Value", "Text"), "Seçiniz", new { @id = "bankaid", @class = "form-control", @required = "required", @style = "width:100%;height:100%" })
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" onclick="YeniIslemKaydet()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-bordered table-striped table-hover" id="islemtablosu">
+    <thead>
+        <tr>
+            <td>İşlem No</td>
+            <td>İşlem Tipi</td>
+            <td>Tarih</td>
+            <td>Kasa/Banka ID</td>
+            <td>Açıklama</td>
+            <td>Para Birimi</td>
+            <td>Tutar</td>
+            <td>İşlemler</td>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+
+
+
+<script src="~/Scripts/jquery-3.4.1.js"></script>
+<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<link href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css" rel="stylesheet" />
+<script src="~/Content/sweetalert2/sweet-alert.init.js"></script>
+<link href="~/Content/sweetalert2/dist/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/Content/sweetalert2/dist/sweetalert2.all.min.js"></script>
+<script>
+    var table;
+
+    $('#islemtipi').on('change', function () { 
+        if (this.value == "T" || this.value == "O") {
+            $("#kasadiv").css("display", "block");
+            $("#bankadiv").css("display", "none");
+        }
+        else { 
+            $("#kasadiv").css("display", "none");
+            $("#bankadiv").css("display", "block");
+        }
+    });
+
+    function Clear() { 
+        $('#islemtipi').val("Nakit Tahsilat");
+        $('#islemno').val("");
+        $('#aciklama').val("");
+        $('#parabirimi').val("Türk Lirası");
+        $('#tutar').val("");
+        $('#kasaid').val("");
+        $('#bankaid').val("");
+    }
+
+    function YeniIslemKaydet() {
+
+        var islemtipi = $('#islemtipi').val(); 
+        var kasa_banka_id = 0; 
+        if (islemtipi == "T" || islemtipi == "O") { 
+            kasa_banka_id = $('#kasaid').val();
+        }
+        else { 
+            kasa_banka_id = $('#bankaid').val();
+        }
+
+        var obj = { 
+            IslemTipi: islemtipi, 
+            IslemNo: $('#islemno').val(), 
+            KasaBankaID: kasa_banka_id,
+            Aciklama: $('#aciklama').val(),
+            ParaBirimi: $('#parabirimi').val(),
+            Tutar: $('#tutar').val(),
+        };
+
+        $.ajax({ 
+            type: "POST",
+            url: "/Home/IslemEkle",
+            data: { model: obj }, 
+            dataType: "json",
+            success: function (res) {
+                $('#exampleModal').modal('hide');
+                Clear();
+                if (res.result == 1) {
+                    table.ajax.reload();
+                } else {
+                    alert("Hata !");
+                }
+            },
+            error: function () {
+                $('#exampleModal').modal('hide');
+                Clear();
+                alert("Hata !");
+            }
+        });
+
+    }
+
+    function IslemSil(id) {
+        Swal.fire({
+            title: "Silme Onayı",
+            text: "Seçili işlemi silmek istediğinizden emin misiniz?",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: "Hayır",
+            confirmButtonText: "Evet",
+            closeOnCancel: true,
+            closeOnConfirm: true,
+            preConfirm: function () {
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/IslemSil?IslemID=" + id,
+                    dataType: "json",
+                    success: function (res) {
+                        if (res.result == 1) {
+                            Swal.fire(
+                                'İşlem Başarılı',
+                                '',
+                                'success'
+                            )
+                            table.ajax.reload();
+                        } else {
+                            Swal.fire(
+                                'İşlem Başarısız',
+                                '',
+                                'error'
+                            )
+                        }
+                    },
+                    error: function () {
+                        alert("Hata !");
+                    }
+                });
+            }
+        })
+
+
+
+
+    }
+
+    $(document).ready(function () {
+        table = $('#islemtablosu').DataTable({
+            ajax: {
+                url: "/Home/GetIslemler",
+                type: "GET",
+                datatype: "json",
+            },
+
+            columns: [
+                { data: "IslemNo" },
+                { data: "IslemTipi" },
+                { data: "IslemTarih" },
+                { data: "KasaBankaAdi" },
+                { data: "Aciklama" },
+                { data: "ParaBirimi" },
+                { data: "Tutar" },
+                {
+                    "data": null,
+                    "render": function (data, type, row) {
+                        return "<div style='text-align:center;'><button onclick='IslemSil(" + row.ID + ")' class='btn btn-sm btn-danger'>Sil</button></div>";
+                    },
+                }
+            ]
+        });
+    });
+</script>
+

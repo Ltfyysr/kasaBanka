@@ -1,0 +1,134 @@
+﻿
+@{
+    ViewBag.Title = "Banka";
+}
+
+<h2>Banka Bilgileri </h2>
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" style="margin-bottom: 10px;">
+    Yeni Banka Ekle
+</button>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Yeni Kasa Ekle</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="col">
+                    <h6>Banka Kodu</h6>
+                    <input id="bankaKodu" />
+                    <br />
+                    <h6>Banka Adı</h6>
+                    <input id="bankaAdi" />
+                    <br />
+                    <h6>Şube Adı</h6>
+                    <input id="subeAdi" />
+                    <br />
+                    <h6>Hesap No</h6>
+                    <input id="hesapNo" />
+                    <br />
+                    <h6>Iban</h6>
+                    <input id="iban" />
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" onclick="YeniBanka()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-bordered table-striped table-hover" id="bankatablosu">
+    <thead>
+        <tr>
+            <td>Banka Kodu</td>
+            <td>Banka Adı</td>
+            <td>Şube Adı</td>
+            <td>Hesap No</td>
+            <td>Iban</td>
+            <td>Bakiye (TL)</td>
+            <td>Bakiye (USD)</td>
+            <td>Bakiye (EUR)</td>
+            <td>Bakiye (GBP)</td>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script src="~/Scripts/jquery-3.4.1.js"></script>
+<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<link href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css" rel="stylesheet" />
+
+
+<script>
+    var table;
+
+    function YeniBanka() {
+        var obj = {
+            BankaKodu: $('#bankaKodu').val(),
+            BankaAdi: $('#bankaAdi').val(),
+            SubeAdi: $('#subeAdi').val(),
+            HesapNo: $('#hesapNo').val(),
+            Iban: $('#iban').val(),
+        };
+
+        $.ajax({
+            type: "POST",
+            url: "/Home/BankaEkle",
+            data: { model: obj },
+            dataType: "json",
+            success: function (res) {
+                $('#exampleModal').modal('hide'); 
+                Clear();
+                if (res.result == 1) {
+                    table.ajax.reload();
+                } else {
+                    alert("Hata !");
+                }
+            },
+            error: function () {
+                $('#exampleModal').modal('hide');
+                Clear();
+                alert("Hata !");
+            }
+        });
+
+    }
+    function Clear() {
+        $('#bankaKodu').val("");
+        $('#bankaAdi').val("");
+        $('#subeAdi').val("");
+        $('#hesapNo').val("");
+        $('#iban').val("");
+    }
+
+
+    $(document).ready(function () {
+       table= $('#bankatablosu').DataTable({
+            ajax: {
+                url: "/Home/GetBanka",
+                type: "GET",
+                datatype: "json",
+            },
+
+            columns: [
+                { data: "BankaKodu" },
+                { data: "BankaAdi" },
+                { data: "SubeAdi" },
+                { data: "HesapNo" },
+                { data: "Iban" },
+                { data: "Bakiye_TL" },
+                { data: "Bakiye_USD" },
+                { data: "Bakiye_EUR" },
+                { data: "Bakiye_GBP" },
+            ]
+        });
+    });
+</script>
+
